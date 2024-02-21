@@ -1,5 +1,5 @@
-CFLAGS = -Og -Wall -pthread
-PHIL_SRC = philosophers.c
+CFLAGS = -Og -g -pthread -Wall -Wno-unused
+PHIL_SRC = src/philosophers.c
 
 all: philosophers
 
