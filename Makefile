@@ -1,10 +1,13 @@
-CFLAGS = -Og -g -pthread -Wall -Wno-unused
-PHIL_SRC = src/philosophers.c
+CFLAGS = -Og -g -pthread -Wall -Wno-unused -Wextra
+
+MAIN_SRC = src/philosophers.c
+HEADERS = src/common.h
+INCLUDE_SRC = src/common.c
 
 all: philosophers
 
-philosophers: $(PHIL_SRC) Makefile
-	gcc -o $@ $(CFLAGS) $(PHIL_SRC)
+philosophers: $(MAIN_SRC) $(INCLUDE_SRC) $(HEADERS) Makefile
+	gcc -o $@ $(CFLAGS) $(MAIN_SRC) $(INCLUDE_SRC) -I $(HEADERS)
 
 clean:
-	rm -rf *~ *.o philosophers *.dSYM
+	rm -rf *~ *.o *.dSYM philosophers
