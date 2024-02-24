@@ -7,7 +7,7 @@ INCLUDE_SRC = src/common.c
 all: philosophers
 
 philosophers: $(MAIN_SRC) $(INCLUDE_SRC) $(HEADERS) Makefile
-	gcc -o $@ $(CFLAGS) $(MAIN_SRC) $(INCLUDE_SRC) -I $(HEADERS)
+	gcc -o $@ $(MAIN_SRC) $(INCLUDE_SRC)  $(CFLAGS) -I $(HEADERS)
 
 clean:
 	rm -rf *~ *.o *.dSYM philosophers
