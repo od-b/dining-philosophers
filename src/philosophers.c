@@ -1,3 +1,5 @@
+#define _GNU_SOURCE
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -6,64 +8,166 @@
 #include <errno.h>
 #include <string.h>
 #include <sys/time.h>
-
+#include <stdbool.h>
 #include "common.h"
 
 /* additional threads (philosophers) to spawn */
-#define N_THREADS 5
-#define MS_DELAY_MIN 100
-#define MS_DELAY_MAX 600
+#define N_THREADS 6
+#define N_PHLS 5
+
+#define THINK_DELAY_MIN 10
+#define THINK_DELAY_MAX 60
+#define EAT_DELAY_MIN 10
+#define EAT_DELAY_MAX 60
+#define PRINT_FREQ_MS 50
+
+#define ERASE_LINE "\33[2K"
+#define CURSOR_UP "\033[A"
+
+enum phl_state {
+    PHL_THINKING = 0,
+    PHL_HUNGRY,
+    PHL_EATING,
+    PHL_FULL
+};
+
+static const char *phl_state_str[] = {
+    [PHL_THINKING] = "thinking",
+    [PHL_HUNGRY] = "hungry",
+    [PHL_EATING] = "eating",
+    [PHL_FULL] = "full"
+};
 
 typedef struct philosopher philosopher_t;
 struct philosopher {
+    uintptr_t id;
     philosopher_t *left;
     philosopher_t *right;
-    uintptr_t id;
+    volatile bool has_fork_l;
+    volatile bool has_fork_r;
+    pthread_cond_t fork_ready;
+    enum phl_state state;
     unsigned int rseed;
+    unsigned int n_meals;
 };
 
-pthread_mutex_t init_guard = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t waiter = PTHREAD_MUTEX_INITIALIZER;
+
+static void think(philosopher_t *self) {
+    self->state = PHL_THINKING;
+    ms_delay(&self->rseed, THINK_DELAY_MIN, THINK_DELAY_MAX);
+}
+
+static void acquire_forks(philosopher_t *self) {
+    self->state = PHL_HUNGRY;
+    pthread_mutex_lock(&waiter);
+    while (self->right->has_fork_l || self->left->has_fork_r) {
+        pthread_cond_wait(&self->fork_ready, &waiter);
+    }
+    self->has_fork_l = true;
+    self->has_fork_r = true;
+    pthread_mutex_unlock(&waiter);
+}
+
+static void eat(philosopher_t *self) {
+    self->state = PHL_EATING;
+    self->n_meals++;
+    ms_delay(&self->rseed, EAT_DELAY_MIN, EAT_DELAY_MAX);
+}
+
+static void release_forks(philosopher_t *self) {
+    self->state = PHL_FULL;
+    pthread_mutex_lock(&waiter);
+    self->has_fork_l = false;
+    self->has_fork_r = false;
+    pthread_cond_signal(&self->left->fork_ready);
+    pthread_cond_signal(&self->right->fork_ready);
+    pthread_mutex_unlock(&waiter);
+}
 
 static void philosophize(philosopher_t *self) {
-    printf("[%lu] initialized, seed=%u\n", self->id, self->rseed);
+    while (1) {
+        think(self);
+        acquire_forks(self);
+        eat(self);
+        release_forks(self);
+    }
+}
 
-    for (int i = 0; i < 3; i++) {
-        long dur = ms_delay(&self->rseed, MS_DELAY_MIN, MS_DELAY_MAX);
-        printf("[%lu] slept for %ldms\n", self->id, dur);
+static void print_table_state(philosopher_t *first) {
+    philosopher_t *curr = first;
+    /* print header row */
+    printf("phl  %-8s  no. meals\n", "state");
+
+    while (curr != NULL) {
+        /* print a row with status on each philosopher */
+        for (int i = 0; i < N_PHLS; i++) {
+            fprintf(stdout, "%-3lu  %-8s  %u\n",
+                    curr->id, phl_state_str[curr->state], curr->n_meals);
+            curr = curr->right;
+        }
+
+        /* probably not needed, but since we are using fprinft */
+        fflush(stdout);
+
+        /* delay a bit. We won't be able to print exact information fast enough anyhow. */
+        ms_delay(NULL, PRINT_FREQ_MS, PRINT_FREQ_MS);
+
+        /* clear prints from stdout. 
+         * This will not be applied until the next newline or flush. */
+        for (int i = 0; i < N_PHLS; i++) {
+            fprintf(stdout, "\r" ERASE_LINE CURSOR_UP);
+        }
     }
 }
 
 int main() {
     pthread_t threads[N_THREADS];
-    philosopher_t philosophers[N_THREADS];
-    philosopher_t *phl_ptrs[N_THREADS];
+    philosopher_t philosophers[N_PHLS];
+    philosopher_t *phl_ptrs[N_PHLS];
 
     struct timeval curr_time;
+    int rc;
 
-    for (uintptr_t i = 0; i < N_THREADS; i++) {
+    /* create philosopher threads */
+    for (uintptr_t i = 0; i < N_PHLS; i++) {
         phl_ptrs[i] = &philosophers[i];
+        philosopher_t *phl = phl_ptrs[i];
 
         /* initialize philosphers here as the allocated arrays are in scope */
-        philosophers[i].id = i;
-        philosophers[i].left = &philosophers[(i + N_THREADS - 1) % N_THREADS];
-        philosophers[i].right = &philosophers[(i + 1) % N_THREADS];
+        phl->id = i;
+        phl->left = &philosophers[(i + N_PHLS - 1) % N_PHLS];
+        phl->right = &philosophers[(i + 1) % N_PHLS];
+        phl->fork_ready = (pthread_cond_t) PTHREAD_COND_INITIALIZER;
+        phl->has_fork_l = false;
+        phl->has_fork_r = false;
+        phl->state = PHL_THINKING;
+        phl->n_meals = 0;
 
         /* seed with nanoseconds, delaying 1ms to ensure variation */
         gettimeofday(&curr_time, NULL);
-        philosophers[i].rseed = curr_time.tv_usec;
+        phl->rseed = curr_time.tv_usec;
         ms_delay(NULL, 1, 1);
 
         /* create and start thread */
-        if (pthread_create(&threads[i], NULL, (void *) philosophize, phl_ptrs[i])) {
+        rc = pthread_create(&threads[i], NULL, (void *) philosophize, phl);
+        if (rc) {
             fprintf(stderr, "creation of thread #%lu failed: %s\n", i, strerror(errno));
             return 1;
         }
     }
 
+    /* create table printing thread */
+    rc = pthread_create(&threads[N_THREADS-2], NULL, (void *) print_table_state, phl_ptrs[0]);
+    if (rc) {
+        fprintf(stderr, "creation of print thread failed: %s\n", strerror(errno));
+        return 1;
+    }
+
+    /* Wait for threads. This will never be reached unless the implementation is altered. */
     for (int i = 0; i < N_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
 
-    fprintf(stderr, "all threads returned\n");
     return 0;
 }
