@@ -1,3 +1,11 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <errno.h>
+#include <string.h>
+#include <sys/time.h>
+
+#include "common.h"
 #include "philosophers.h"
 
 static const char *phl_state_str[] = {
@@ -58,7 +66,7 @@ static void print_table_state(philosopher_t *first) {
     while (curr != NULL) {
         /* print a row with status on each philosopher */
         for (int i = 0; i < N_PHLS; i++) {
-            fprintf(stdout, "%-3lu  %-8s  %u\n",
+            fprintf(stdout, "%-3u  %-8s  %u\n",
                     curr->id, phl_state_str[curr->state], curr->n_meals);
             curr = curr->right;
         }
@@ -72,7 +80,7 @@ static void print_table_state(philosopher_t *first) {
         /* clear prints from stdout. 
          * This will not be applied until the next newline or flush. */
         for (int i = 0; i < N_PHLS; i++) {
-            fprintf(stdout, "\r" ERASE_LINE CURSOR_UP);
+            fprintf(stdout, "\r" TERM_ERASE_LINE TERM_CURSOR_UP);
         }
     }
 }
@@ -83,10 +91,10 @@ int main() {
     philosopher_t *phl_ptrs[N_PHLS];
 
     struct timeval curr_time;
-    int rc;
+    int rc;     // generic, return code
 
     /* create philosopher threads */
-    for (uintptr_t i = 0; i < N_PHLS; i++) {
+    for (unsigned int i = 0; i < N_PHLS; i++) {
         phl_ptrs[i] = &philosophers[i];
         philosopher_t *phl = phl_ptrs[i];
 
@@ -108,20 +116,20 @@ int main() {
         /* create and start thread */
         rc = pthread_create(&threads[i], NULL, (void *) philosophize, phl);
         if (rc) {
-            fprintf(stderr, "creation of thread #%lu failed: %s\n", i, strerror(errno));
+            fprintf(stderr, "creation of thread #%u failed: %s\n", i, strerror(errno));
             return 1;
         }
     }
 
     /* create table printing thread */
-    rc = pthread_create(&threads[N_THREADS-2], NULL, (void *) print_table_state, phl_ptrs[0]);
+    rc = pthread_create(&threads[N_THREADS-1], NULL, (void *) print_table_state, phl_ptrs[0]);
     if (rc) {
         fprintf(stderr, "creation of print thread failed: %s\n", strerror(errno));
         return 1;
     }
 
     /* Wait for threads. This will never be reached unless the implementation is altered. */
-    for (int i = 0; i < N_THREADS; i++) {
+    for (unsigned int i = 0; i < N_THREADS; i++) {
         pthread_join(threads[i], NULL);
     }
 
