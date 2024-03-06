@@ -1,40 +1,21 @@
 #ifndef PHILOSOPHERS_H
 #define PHILOSOPHERS_H
 
-#include <pthread.h>
-#include <stdbool.h>
-
-/* additional threads (philosophers) to spawn */
-#define N_PHLS 7
-#define N_THREADS ( N_PHLS + 1 )
-
+/* philosopher delays */
 #define THINK_DELAY_MIN 10
 #define THINK_DELAY_MAX 60
 #define EAT_DELAY_MIN 10
 #define EAT_DELAY_MAX 60
+
+/* frequency of prints done by the status thread */
 #define PRINT_FREQ_MS 50
 
-#define TERM_ERASE_LINE "\33[2K"
-#define TERM_CURSOR_UP "\033[A"
+/* set to 0 to print a status summary instead of table */
+#define PRINT_STATUS_TABLE 1
 
-enum phl_state {
-    PHL_THINKING = 0,
-    PHL_HUNGRY,
-    PHL_EATING,
-    PHL_FULL
-};
-
-typedef struct philosopher philosopher_t;
-struct philosopher {
-    unsigned int id;
-    philosopher_t *left;
-    philosopher_t *right;
-    volatile bool has_fork_l;
-    volatile bool has_fork_r;
-    pthread_cond_t fork_ready;
-    enum phl_state state;
-    unsigned int rseed;
-    unsigned int n_meals;
-};
+/* disable the status printing thread entirely.
+ * this will override PRINT_FREQ_MS and PRINT_STATUS_TABLE.
+ * a summary will still be printed at the end of the simulation */
+#define DISABLE_STAT_PRINTS 0
 
 #endif /* PHILOSOPHERS_H */

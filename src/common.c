@@ -7,11 +7,6 @@
 
 #include "common.h"
 
-/*
- * sleep between ms_min and ms_max
- * seed is nullable if ms_min==ms_max
- * returns the total time slept in ms, or -1 on error
- */
 long ms_delay(unsigned int *seed, long ms_min, long ms_max) {
     /* delay time in milliseconds */
     long tv_msec = ms_min;
@@ -38,4 +33,12 @@ long ms_delay(unsigned int *seed, long ms_min, long ms_max) {
     }
 
     return tv_msec;
+}
+
+char *get_basename(char *path) {
+    char *basename = strrchr(path, '/');
+    if (!basename) {
+        return path;
+    }
+    return basename + 1;
 }
