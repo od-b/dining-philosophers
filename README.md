@@ -16,15 +16,13 @@ Usage:
 ```
 philosophers <num_philosophers> <n_meals>
 ```
+`<num_philosophers>`: number of philosopher threads to create  
+`<n_meals>`: When any one philosopher reaches this meal count, they will all exit at the end of their current cycle.  
 
 Help / Info / Example: 
 ```
 philosophers [--h | --help]
 ```
-
-`<num_philosophers>` number of philosopher threads to create
-`<n_meals>` Is essentially for how long to run the simulation. When any one philosopher reaches this number, all will exit at the end of their current cycle.
-
 
 Definitions within `src/philosophers.h` controls delay timings (how long time it takes to eat, put down forks).
 
@@ -32,7 +30,7 @@ Definitions within `src/philosophers.h` controls delay timings (how long time it
 ### Bugs
 Inline table printing breaks for a sufficient amount of philosophers. 
 This does not affect functionality, but the terminal will be flooded with prints.  
-To only print summary and not the entire table, define `PRINT_STATUS_TABLE 0` in `src/philosophers.h`. 
+To only print summary and not the entire table, set `PRINT_STATUS_TABLE` to 0, within `src/philosophers.h`, or provide it as a compile time definition (e.g. `make philosophers CFLAGS="-D PRINT_STATUS_TABLE=0"`). 
 
 ---
 

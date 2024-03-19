@@ -10,8 +10,10 @@
 /* frequency of prints done by the status thread */
 #define PRINT_FREQ_MS 50
 
+#ifndef PRINT_STATUS_TABLE
 /* set to 0 to print a status summary instead of table */
 #define PRINT_STATUS_TABLE 1
+#endif /* PRINT_STATUS_TABLE */
 
 /* disable the status printing thread entirely.
  * this will override PRINT_FREQ_MS and PRINT_STATUS_TABLE.

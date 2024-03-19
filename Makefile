@@ -1,7 +1,5 @@
-# debugging:
-# CFLAGS = -Og -g -pthread -Wall -Wno-unused -Wextra
-# regular:
-CFLAGS = -O2 -pthread -Wall -Wno-unused -Wextra
+# override CFLAGS = -Og -g -pthread -Wall -Wextra -Wno-unused 
+override CFLAGS += -O2 -pthread -Wall -Wno-unused
 
 CONFIG_SRC = src/philosophers.h
 MAIN_SRC = src/philosophers.c
