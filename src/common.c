@@ -1,11 +1,11 @@
+#include "common.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <errno.h>
 #include <string.h>
 #include <sys/time.h>
-
-#include "common.h"
 
 long ms_delay(unsigned int *seed, long ms_min, long ms_max) {
     /* delay time in milliseconds */

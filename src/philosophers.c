@@ -1,14 +1,15 @@
+#include "philosophers.h"
+
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdbool.h>
 
-#include <pthread.h>
 #include <errno.h>
+#include <pthread.h>
 #include <string.h>
 #include <sys/time.h>
 
 #include "common.h"
-#include "philosophers.h"
 
 enum phl_state {
     PHL_THINKING = 0,
@@ -130,8 +131,7 @@ static void print_summary(philosopher_t *phil) {
 static void print_table(philosopher_t *phl) {
     /* print a row with status on each philosopher */
     for (int i = 0; i < n_phils; i++) {
-        fprintf(stdout, "%-3u  %-8s  %-6u\n", 
-                phl->id, phl_state_str[phl->state], phl->n_meals);
+        fprintf(stdout, "%-3u  %-8s  %-6u\n", phl->id, phl_state_str[phl->state], phl->n_meals);
         phl = phl->right;
     }
 
@@ -216,7 +216,7 @@ static void stat_print_thread(philosopher_t *first) {
  */
 static philosopher_t *philosophers_create() {
     philosopher_t *phils = calloc((size_t) n_phils, sizeof(philosopher_t));
-    struct timeval curr_time;   // used for seeding
+    struct timeval curr_time; // used for seeding
 
     /* create philosopher threads */
     for (int i = 0; i < n_phils; i++) {
@@ -254,8 +254,11 @@ static int parse_args(int argc, char **argv) {
 
         /* --h or --help prints further info */
         if (argc == 2 && (strcmp(argv[1], "--h") == 0 || strcmp(argv[1], "--help") == 0)) {
-            fprintf(stderr, "Example:\n '%s 7 1000'\n -> will spawn 7 philosophers.",
-                    get_basename(argv[0]));
+            fprintf(
+                stderr,
+                "Example:\n '%s 7 1000'\n -> will spawn 7 philosophers.",
+                get_basename(argv[0])
+            );
             fprintf(stderr, "  They will continue until any one of them consumes 1000 meals\n");
             fprintf(stderr, "See src/philosophers.h to adjust delay parameters\n");
         }
@@ -292,8 +295,12 @@ int main(int argc, char **argv) {
     pthread_t *threads = calloc((size_t) n_threads, sizeof(pthread_t));
     philosopher_t *phils = philosophers_create();
 
-    printf("%d philosophers are about to eat. They will continue until one of them consumes %d meals\n",
-           n_phils, n_meals);
+    printf(
+        "%d philosophers are about to eat. They will continue until one of them consumes %d "
+        "meals\n",
+        n_phils,
+        n_meals
+    );
 
     /* spawn philosopher threads */
     for (int i = 0; i < n_phils; i++) {
@@ -304,7 +311,7 @@ int main(int argc, char **argv) {
     }
 
     /* spawn table printing thread */
-    if (pthread_create(&threads[n_threads-1], NULL, (void *) stat_print_thread, &phils[0])) {
+    if (pthread_create(&threads[n_threads - 1], NULL, (void *) stat_print_thread, &phils[0])) {
         fprintf(stderr, "creation of print thread failed: %s\n", strerror(errno));
         return 1;
     }

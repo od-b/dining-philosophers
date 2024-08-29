@@ -4,8 +4,8 @@
 /* philosopher delays */
 #define THINK_DELAY_MIN 10
 #define THINK_DELAY_MAX 60
-#define EAT_DELAY_MIN 10
-#define EAT_DELAY_MAX 60
+#define EAT_DELAY_MIN   10
+#define EAT_DELAY_MAX   60
 
 /* frequency of prints done by the status thread */
 #define PRINT_FREQ_MS 50

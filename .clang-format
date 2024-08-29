@@ -1,0 +1,82 @@
+---
+BasedOnStyle: LLVM
+
+## Indentation and text width
+IndentWidth: 4
+ContinuationIndentWidth: 4
+UseTab: Never
+ColumnLimit: 100
+IndentCaseLabels: true
+IndentCaseBlocks: true
+
+## Braces
+# BreakBeforeBraces: Custom
+# BraceWrapping:
+#   AfterFunction: false
+
+# Includes
+SortIncludes:    CaseSensitive
+IncludeBlocks:   Regroup
+IncludeIsMainRegex: '(_[a-zA-Z0-9_]+)?$'
+IncludeCategories:
+  # standard headers
+  - Regex:  '^<std'
+    Priority: 10
+  # Other <> angle bracket includes
+  - Regex:  '^<.*>$'
+    Priority: 20
+  # quote includes
+  - Regex:  '^".*"$'
+    Priority: 30
+
+## Alignment
+
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: true
+
+AlignConsecutiveAssignments:  None
+AlignConsecutiveBitFields:    None
+AlignConsecutiveDeclarations: None
+
+TrailingCommentsAlignmentKinds: TCAS_Always
+MaxEmptyLinesToKeep: 2
+OverEmptyLines: 1
+
+# AlignArrayOfStructures: Left     # This feature seems buggy, disable for now
+
+# Aligned backslashes (in e.g. multi-line macros) look great but they fall
+# apart easily and then they look terrible.
+AlignEscapedNewlines:   DontAlign
+# AlignArrayOfStructures: Right
+
+## Compressing short constructs
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: false
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+## Breaking long constructs
+
+# Function params/args that don't fit on one line
+AlignAfterOpenBracket: BlockIndent
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+
+BinPackArguments: false
+BinPackParameters: false
+
+# Strings that don't fit on one line
+AlwaysBreakBeforeMultilineStrings: true
+
+# Expressions that don't fit on one line:
+BreakBeforeBinaryOperators: NonAssignment
+
+## Other style choices
+
+#BreakAfterAttributes: Always   # Requires newer clang-format version
+SpaceAfterCStyleCast: true
+
+...
